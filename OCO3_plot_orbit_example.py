@@ -225,7 +225,7 @@ def plot_map(data_temp):
         target_yes = False
 
   #Grab all the TG/AM names from a csv
-  target_id, target_name, site_center, mode_raw = np.genfromtxt('/home/rnelson/data/OCO3/oco3_targets_20190918_cropped.csv',skip_header=1,unpack=True,delimiter=',',usecols=(0,1,3,4),dtype=None)
+  target_id, target_name, site_center, mode_raw = np.genfromtxt('/data/oco3_targets_20190918_cropped.csv',skip_header=1,unpack=True,delimiter=',',usecols=(0,1,3,4),dtype=None)
   site_center_lat, site_center_lon = np.zeros((len(site_center))),np.zeros((len(site_center)))
   for i in range(len(site_center)):
     site_center_lon[i] = float(str(site_center[i]).split(' ')[0][8:])
