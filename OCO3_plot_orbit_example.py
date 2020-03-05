@@ -12,10 +12,14 @@ import calendar
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import scipy.cluster.hierarchy as hcluster 
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from haversine import haversine #Can install via conda
+from haversine import haversine
+#Can install any missing modules via conda
 
+
+############################
 #Code to plot real OCO-3 TG/AM data!
-#Robert R. Nelson, last updated 19 September 2019
+#Robert R. Nelson, last updated 5 March 2020
+
 
 def load_orbits(data_inputs):
 
@@ -31,49 +35,77 @@ def load_orbits(data_inputs):
   data_input = data_input[data_input_sort_arg]  
   print(len(data_input)," files to load...")
 
+  #Assume a max of ~65,000 soundings per orbit file
+  n_soundings_per_orbit = 65000
+
   #Load L2
-  if ("l2_plus_more" in data_input[0]) | ("L2Std" in data_input[0]):
-    data_temp = np.zeros((3000000),dtype=[\
-	('sounding_id','int'),
-	('latitude','f8'),
-	('longitude','f8'),
-	('vertex_latitude_1','f8'),
-	('vertex_latitude_2','f8'),
-	('vertex_latitude_3','f8'),
-	('vertex_latitude_4','f8'),
-	('vertex_longitude_1','f8'),
-	('vertex_longitude_2','f8'),
-	('vertex_longitude_3','f8'),
-	('vertex_longitude_4','f8'),
-	('sounding_operation_mode','a2'),
-	('sounding_operation_mode_string','a6'),
-	('solar_zenith_angle','f8'),
-	('production_string','a20'),
-	('sounding_pcs_mode','a2'),
-	('sounding_pcs_data_source','f8'),
-	('sounding_pcs_data_source_string','a5'),
-	('outcome_flag','f8'),
-	('orbit','f8'),
-	('albedo_o2','f8'),
-	('albedo_wco2','f8'),
-	('albedo_sco2','f8'),
-	('albedo_slope_o2','f8'),
-	('albedo_slope_wco2','f8'),
-	('albedo_slope_sco2','f8'),
-	('land_fraction','f8'),
-	('polarization_angle','f8'),
-	('chi2_o2','f8'),
-	('chi2_wco2','f8'),
-	('chi2_sco2','f8'),
-	('sounding_index','f8'),
-	('surface_type','f8'),
-	('co2_ratio','f8'),
-	('snr_o2','f8'),
-	('snr_wco2','f8'),
-	('snr_sco2','f8'),
-	('xco2','f8'),
-	('iterations','f8'),
-	('dp','f8')])
+  if ("L2Std" in data_input[0]):
+    data_temp = np.zeros((int(len(data_input) * n_soundings_per_orbit)),dtype=[\
+        ('sounding_id','int'),
+        ('latitude','f8'),
+        ('longitude','f8'),
+        ('footprint','i8'),
+        ('time','f8'),
+        ('altitude','f8'),
+        ('surface_roughness','f8'),
+        ('vertex_latitude_1','f8'),
+        ('vertex_latitude_2','f8'),
+        ('vertex_latitude_3','f8'),
+        ('vertex_latitude_4','f8'),
+        ('vertex_longitude_1','f8'),
+        ('vertex_longitude_2','f8'),
+        ('vertex_longitude_3','f8'),
+        ('vertex_longitude_4','f8'),
+        ('sounding_operation_mode','a2'),
+        ('sounding_operation_mode_string','a6'),
+        ('pma_azimuth','f8'),
+        ('pma_elevation','f8'),
+        ('solar_zenith_angle','f8'),
+        ('airmass','f8'),
+        ('production_string','a100'),
+        ('sounding_pcs_mode','a2'),
+        ('sounding_pcs_data_source','f8'),
+        ('sounding_pcs_data_source_string','a20'),
+        ('outcome_flag','f8'),
+        ('orbit','f8'),
+        ('albedo_o2','f8'),
+        ('albedo_wco2','f8'),
+        ('albedo_sco2','f8'),
+        ('albedo_slope_o2','f8'),
+        ('albedo_slope_wco2','f8'),
+        ('albedo_slope_sco2','f8'),
+        ('brdf_weight_o2','f8'),
+        ('brdf_weight_wco2','f8'),
+        ('brdf_weight_sco2','f8'),
+        ('land_fraction','f8'),
+        ('aod_du','f8'),
+        ('aod_ss','f8'),
+        ('aod_bc','f8'),
+        ('aod_oc','f8'),
+        ('aod_so','f8'),
+        ('aod_ice','f8'),
+        ('aod_water','f8'),
+        ('aod_st','f8'),
+        ('aod_total','f8'),
+        ('tcwv','f8'),
+        ('wind_speed','f8'),
+        ('wind_speed_prior','f8'),
+        ('polarization_angle','f8'),
+        ('chi2_o2','f8'),
+        ('chi2_wco2','f8'),
+        ('chi2_sco2','f8'),
+        ('sounding_index','f8'),
+        ('surface_type','f8'),
+        ('co2_ratio','f8'),
+        ('h2o_ratio','f8'),
+        ('snr_o2','f8'),
+        ('snr_wco2','f8'),
+        ('snr_sco2','f8'),
+        ('xco2','f8'),
+        ('xco2_uncert','f8'),
+        ('iterations','f8'),
+        ('dp','f8'),
+        ('dp_abp','f8')])
 
     count, count_new = 0,0
 
@@ -89,6 +121,9 @@ def load_orbits(data_inputs):
       data_temp['sounding_id'][count:count_new] = np.array(data_file['RetrievalHeader/sounding_id'])
       data_temp['latitude'][count:count_new] = np.array(data_file['RetrievalGeometry/retrieval_latitude'])
       data_temp['longitude'][count:count_new] = np.array(data_file['RetrievalGeometry/retrieval_longitude'])
+      data_temp['time'][count:count_new] = np.array(data_file['RetrievalHeader/retrieval_time_tai93'])
+      data_temp['altitude'][count:count_new] = np.array(data_file['RetrievalGeometry/retrieval_altitude'])
+      data_temp['surface_roughness'][count:count_new] = np.array(data_file['RetrievalGeometry/retrieval_surface_roughness'])
       data_temp['outcome_flag'][count:count_new] = np.array(data_file['RetrievalResults/outcome_flag'])
       data_temp['vertex_latitude_1'][count:count_new] = np.array(data_file['/RetrievalGeometry/retrieval_vertex_latitude'])[:,1,0]
       data_temp['vertex_latitude_2'][count:count_new] = np.array(data_file['/RetrievalGeometry/retrieval_vertex_latitude'])[:,1,1]
@@ -99,12 +134,21 @@ def load_orbits(data_inputs):
       data_temp['vertex_longitude_3'][count:count_new] = np.array(data_file['/RetrievalGeometry/retrieval_vertex_longitude'])[:,1,2]
       data_temp['vertex_longitude_4'][count:count_new] = np.array(data_file['/RetrievalGeometry/retrieval_vertex_longitude'])[:,1,3]
       data_temp['xco2'][count:count_new] = np.array(data_file['/RetrievalResults/xco2']) * 1.e6
+      data_temp['xco2_uncert'][count:count_new] = np.array(data_file['/RetrievalResults/xco2_uncert']) * 1.e6
+      data_temp['wind_speed'][count:count_new] = np.array(data_file['/RetrievalResults/wind_speed'])
+      data_temp['wind_speed_prior'][count:count_new] = np.array(data_file['/RetrievalResults/wind_speed_apriori'])
       data_temp['sounding_operation_mode'][count:count_new] = np.array(data_file['/RetrievalHeader/sounding_operation_mode'])
       data_temp['sounding_index'][count:count_new] = np.array(data_file['/RetrievalHeader/sounding_index'])
-      data_temp['sounding_pcs_data_source'][count:count_new] = np.array(data_file['/RetrievalGeometry/retrieval_pcs_data_source'])
-      data_temp['sounding_pcs_mode'][count:count_new] = np.array(data_file['/RetrievalGeometry/retrieval_pcs_mode'])
+      try:
+        data_temp['sounding_pcs_data_source'][count:count_new] = np.array(data_file['/RetrievalGeometry/retrieval_pcs_data_source'])
+        data_temp['sounding_pcs_mode'][count:count_new] = np.array(data_file['/RetrievalGeometry/retrieval_pcs_mode'])
+        data_temp['pma_elevation'][count:count_new] = np.array(data_file['/RetrievalGeometry/retrieval_pma_elevation'])
+        data_temp['pma_azimuth'][count:count_new] = np.array(data_file['/RetrievalGeometry/retrieval_pma_azimuth'])
+      except: print("PMA/PCA data missing...")
+
       data_temp['polarization_angle'][count:count_new] = np.array(data_file['/RetrievalGeometry/retrieval_polarization_angle'])
       data_temp['solar_zenith_angle'][count:count_new] = np.array(data_file['/RetrievalGeometry/retrieval_solar_zenith'])
+      data_temp['airmass'][count:count_new] = 1./np.cos(np.array(data_file['/RetrievalGeometry/retrieval_solar_zenith'])/180.*np.pi) + 1./np.cos(np.array(data_file['/RetrievalGeometry/retrieval_zenith'])/180.*np.pi)
       data_temp['surface_type'][count:count_new][np.array(data_file['/RetrievalResults/surface_type']) == b'Coxmunk,Lambertian'] = 0
       data_temp['surface_type'][count:count_new][np.array(data_file['/RetrievalResults/surface_type']) == b'BRDF Soil         '] = 1
       data_temp['chi2_o2'][count:count_new] = np.array(data_file['/SpectralParameters/reduced_chi_squared_o2_fph'])
@@ -114,8 +158,10 @@ def load_orbits(data_inputs):
       data_temp['snr_wco2'][count:count_new] = np.array(data_file['/SpectralParameters/signal_weak_co2_fph']) /  np.array(data_file['/SpectralParameters/noise_weak_co2_fph'])
       data_temp['snr_sco2'][count:count_new] = np.array(data_file['/SpectralParameters/signal_strong_co2_fph']) /  np.array(data_file['/SpectralParameters/noise_strong_co2_fph'])
       data_temp['iterations'][count:count_new] = np.array(data_file['/RetrievalResults/iterations'])
-      data_temp['dp'][count:count_new] = np.array(data_file['/RetrievalResults/surface_pressure_fph']) - np.array(data_file['RetrievalResults/surface_pressure_apriori_fph'])
+      data_temp['dp'][count:count_new] = (np.array(data_file['/RetrievalResults/surface_pressure_fph']) - np.array(data_file['RetrievalResults/surface_pressure_apriori_fph'])) / 100. #to hPa
       data_temp['co2_ratio'][count:count_new] = np.array(data_file['/PreprocessingResults/co2_ratio_idp'])
+      data_temp['h2o_ratio'][count:count_new] = np.array(data_file['/PreprocessingResults/h2o_ratio_idp'])
+      data_temp['dp_abp'][count:count_new] = np.array(data_file['/PreprocessingResults/surface_pressure_delta_abp']) / 100. #hPa
 
       #Albedos
       land_mask_temp = np.array(data_file['/RetrievalResults/surface_type']) == b'BRDF Soil         ' #String nonsense
@@ -142,6 +188,13 @@ def load_orbits(data_inputs):
         data_temp['albedo_slope_sco2'][count:count_new][~land_mask_temp] = np.array(data_file['/AlbedoResults/albedo_slope_strong_co2'])[~land_mask_temp]
       except: print("No ocean data in this file!")
 
+      #BRDF weights
+      try:
+        data_temp['brdf_weight_o2'][count:count_new][land_mask_temp] = np.array(data_file['/BRDFResults/brdf_weight_o2'])[land_mask_temp]
+        data_temp['brdf_weight_wco2'][count:count_new][land_mask_temp] = np.array(data_file['/BRDFResults/brdf_weight_weak_co2'])[land_mask_temp]
+        data_temp['brdf_weight_sco2'][count:count_new][land_mask_temp] = np.array(data_file['/BRDFResults/brdf_weight_strong_co2'])[land_mask_temp]
+      except: print("No land data in this file!")
+
       #Convert sounding_pcs_data_source int flag into a useful string!
       data_temp['sounding_pcs_data_source_string'][count:count_new][data_temp['sounding_pcs_data_source'][count:count_new] == 0] = "SRU+IMU+GPS"
       data_temp['sounding_pcs_data_source_string'][count:count_new][data_temp['sounding_pcs_data_source'][count:count_new] == 1] = "SRU+GPS"
@@ -153,10 +206,28 @@ def load_orbits(data_inputs):
       data_temp['sounding_pcs_data_source_string'][count:count_new][data_temp['sounding_pcs_data_source'][count:count_new] == 7] = "BAD"
 
 
-      try: data_temp['orbit'][count:count_new] = data_input[i].rsplit('/')[-1][13:18] 
+      data_temp['tcwv'][count:count_new] = np.array(data_file['/RetrievalResults/retrieved_h2o_column'])/6.0221415e23*1.80153e-2
+
+      #Load aerosols
+      try:
+        aerosol_type_temp = np.array(data_file['/AerosolResults/aerosol_type_retrieved'])
+        data_temp['aod_du'][count:count_new][aerosol_type_temp[:,0] == 1] = np.exp(np.array(data_file['/AerosolResults/aerosol_param'])[aerosol_type_temp[:,0] == 1,0,0])
+        data_temp['aod_bc'][count:count_new][aerosol_type_temp[:,2] == 1] = np.exp(np.array(data_file['/AerosolResults/aerosol_param'])[aerosol_type_temp[:,2] == 1,2,0])
+        data_temp['aod_oc'][count:count_new][aerosol_type_temp[:,3] == 1] = np.exp(np.array(data_file['/AerosolResults/aerosol_param'])[aerosol_type_temp[:,3] == 1,3,0])
+        data_temp['aod_ss'][count:count_new][aerosol_type_temp[:,1] == 1] = np.exp(np.array(data_file['/AerosolResults/aerosol_param'])[aerosol_type_temp[:,1] == 1,1,0])
+        data_temp['aod_so'][count:count_new][aerosol_type_temp[:,4] == 1] = np.exp(np.array(data_file['/AerosolResults/aerosol_param'])[aerosol_type_temp[:,4] == 1,4,0])
+        data_temp['aod_ice'][count:count_new][aerosol_type_temp[:,5] == 1] = np.exp(np.array(data_file['/AerosolResults/aerosol_param'])[aerosol_type_temp[:,5] == 1,5,0])
+        data_temp['aod_water'][count:count_new][aerosol_type_temp[:,6] == 1] = np.exp(np.array(data_file['/AerosolResults/aerosol_param'])[aerosol_type_temp[:,6] == 1,6,0])
+        data_temp['aod_st'][count:count_new][aerosol_type_temp[:,7] == 1] = np.exp(np.array(data_file['/AerosolResults/aerosol_param'])[aerosol_type_temp[:,7] == 1,7,0])
+
+        data_temp['aod_total'][count:count_new] = np.array(data_file['AerosolResults/aerosol_total_aod'])
+      except: print("Loading aerosols failed for some reason!")
+
+      try: data_temp['orbit'][count:count_new] = data_input[i].rsplit('/')[-1][13:18]
       except: print("Fix this later")
 
       data_temp['production_string'][count:count_new] = data_file['/Metadata/CollectionLabel']
+
       data_temp['sounding_operation_mode_string'][count:count_new][data_temp['sounding_operation_mode'][count:count_new] == b'TG'] = "Target"
       data_temp['sounding_operation_mode_string'][count:count_new][data_temp['sounding_operation_mode'][count:count_new] == b'AM'] = "SAM"
 
@@ -177,10 +248,9 @@ def load_orbits(data_inputs):
     data_temp = data_temp[mask_temp]
     print("Removed ",np.sum(~mask_temp)," bad sounding_ids")
 
-    #Remove bad lats
-    mask_temp = (data_temp['latitude'] > -999999)&(data_temp['latitude'] != 0.0)
-    data_temp = data_temp[mask_temp]
-    print("Removed ",np.sum(~mask_temp)," bad lats")
+    #Extract footprint from sounding id
+    try: data_temp['footprint'] = (np.vectorize(lambda x: x[15:])(data_temp['sounding_id'].astype(int).astype(str))).astype(int)
+    except: print("Couldn't extract footprint from the sounding_id for some reason...")
 
   else: print("Choose a valid file format...")
 
@@ -193,9 +263,8 @@ def load_orbits(data_inputs):
 ############################
 #Load the data. The paths get globbed and then combined, so you can be clever on exactly what data you want to read in
 
-#All September 13th orbits!
-data_l2 = load_orbits(['/oco3-p2/scf/SCF_B9210_r01/2019/09/13/L2Std/oco3_L2StdSC_*.h5'])
-
+#All 28 Feb. 2020 OCO-3 orbits from SCF_B10110_r01!
+data_l2 = load_orbits(['/oco3-p2/scf/SCF_B10110_r01/2020/02/28/L2Std/oco3_L2StdSC_*.h5'])
 
 
 ############################
@@ -215,50 +284,86 @@ def plot_map(data_temp):
         start_indices.append(i)
         target_yes = True
       try:
-        #When we stop recording consecutive AMs or TGs, end the target
-        if mask_temp[i+1] != mask_temp[i]:
+        #When we stop recording consecutive AMs or TGs, end the target. Or, if the next sounding is an AM/TG and is greater than 500 km away from the previous sounding, call it a new SAM/TG.
+        if (mask_temp[i+1] != mask_temp[i]) | ((haversine((data_temp['latitude'][i],data_temp['longitude'][i]),(data_temp['latitude'][i+1],data_temp['longitude'][i+1])) > 500) & (mask_temp[i+1] > 0)):
           end_indices.append(i+1)
           target_yes = False
-      except: 
+      except:
         print("End of file...")
         end_indices.append(i+1)
         target_yes = False
 
   #Grab all the TG/AM names from a csv
-  target_id, target_name, site_center, mode_raw = np.genfromtxt('/data/oco3_targets_20190918_cropped.csv',skip_header=1,unpack=True,delimiter=',',usecols=(0,1,3,4),dtype=None)
+  target_id, target_name, site_center, mode_raw = np.genfromtxt('/home/rnelson/data/OCO3/oco3_targets_20200124_cropped.csv',skip_header=1,unpack=True,delimiter=',',usecols=(0,1,3,4),dtype=None)
   site_center_lat, site_center_lon = np.zeros((len(site_center))),np.zeros((len(site_center)))
   for i in range(len(site_center)):
     site_center_lon[i] = float(str(site_center[i]).split(' ')[0][8:])
     site_center_lat[i] = float(str(site_center[i]).split(' ')[1][:-2])
 
 
+
   ############################
   epsg = 3857 #Web mercator, fine for small areas
-  cbar_label_size = 16
-  scat_size = 18
   dref=40. #km, for plotting a scale
 
-  #Plot all the individual TG/AMs!
+  #Loop through and plot all the individual TG/AMs!
   for i in range(len(start_indices)):
     print("Plotting TG/AM ",str(i+1)," of ",len(start_indices))
     data_temp2 = data_temp[start_indices[i]:end_indices[i]]
 
-    #Remove weird outliers that are far from the actual TG/AM by selecing the main "cluster" of soundings
-    cluster_input = np.array([data_temp['longitude'][start_indices[i]:end_indices[i]],data_temp['latitude'][start_indices[i]:end_indices[i]]]).T
-    clusters = hcluster.fclusterdata(cluster_input,0.5,criterion='distance')
-    if np.sum(np.bincount(clusters) > 30) > 1:
-      print("There are multiple large clusters of data, which means something has gone wrong.")
-      sys.exit()
-    main_cluster_index = np.argmax(np.bincount(clusters))
-    data_temp2 = data_temp2[clusters == main_cluster_index]
+    #Hack to remove weird outliers that are far from the actual TG/AM by selecing the main "cluster" of soundings
+    try:
+      cluster_input = np.array([data_temp['longitude'][start_indices[i]:end_indices[i]],data_temp['latitude'][start_indices[i]:end_indices[i]]]).T
+      clusters = hcluster.fclusterdata(cluster_input,0.5,criterion='distance')
+      if np.sum(np.bincount(clusters) > 30) > 1:
+        print("There are multiple large clusters of data, which means something has gone wrong.")
+        sys.exit()
+      main_cluster_index = np.argmax(np.bincount(clusters))
+      data_temp2 = data_temp2[clusters == main_cluster_index]
+    except: print("Clustering didn't work for some reason...")
 
+    #Strip some timestamp stuff from the sounding_id
+    month_str = calendar.month_abbr[int(data_temp2['sounding_id'][0].astype(str)[4:6].lstrip("0"))]
+    day_str, year_str = data_temp2['sounding_id'][0].astype(str)[6:8].lstrip("0"), data_temp2['sounding_id'][0].astype(str)[:4].lstrip("0")
+    hour_str, minute_str = data_temp2['sounding_id'][0].astype(str)[8:10],data_temp2['sounding_id'][0].astype(str)[10:12]
+
+    #Find the closest listed target in space and use that as a label. There really needs to be a better way to do this without having to load auxiliary files
+    if data_temp2[0]['sounding_operation_mode'] == b'AM':
+      #Only use the official SAM/TG box (identified by sounding_pcs_mode)
+      if np.sum(data_temp2['sounding_pcs_mode'] == b'AM') > 0: mean_lat_temp,mean_lon_temp = np.median(data_temp2['latitude'][data_temp2['sounding_pcs_mode'] == b'AM']), np.median(data_temp2['longitude'][data_temp2['sounding_pcs_mode'] == b'AM'])
+      else: mean_lat_temp,mean_lon_temp = np.median(data_temp2['latitude']), np.median(data_temp2['longitude'])
+
+      dist_temp = np.zeros((len(target_id[mode_raw == b'Area Mapping Mode'])))
+      for j in range(len(dist_temp)):
+        dist_temp[j] = haversine((mean_lat_temp,mean_lon_temp),(site_center_lat[mode_raw == b'Area Mapping Mode'][j],site_center_lon[mode_raw == b'Area Mapping Mode'][j]))
+      target_id_temp, target_name_temp = target_id[mode_raw == b'Area Mapping Mode'][np.argmin(dist_temp)].astype(str), target_name[mode_raw == b'Area Mapping Mode'][np.argmin(dist_temp)].astype(str)
+      site_center_lat_temp, site_center_lon_temp = site_center_lat[mode_raw == b'Area Mapping Mode'][np.argmin(dist_temp)],site_center_lon[mode_raw == b'Area Mapping Mode'][np.argmin(dist_temp)]
+
+    elif data_temp2[0]['sounding_operation_mode'] == b'TG':
+      if np.sum(data_temp2['sounding_pcs_mode'] == b'TG') > 0: mean_lat_temp,mean_lon_temp = np.median(data_temp2['latitude'][data_temp2['sounding_pcs_mode'] == b'TG']), np.median(data_temp2['longitude'][data_temp2['sounding_pcs_mode'] == b'TG'])
+      else: mean_lat_temp,mean_lon_temp = np.median(data_temp2['latitude']), np.median(data_temp2['longitude'])
+
+      dist_temp = np.zeros((len(target_id[mode_raw == b'Target Mode'])))
+      for j in range(len(dist_temp)):
+        dist_temp[j] = haversine((mean_lat_temp,mean_lon_temp),(site_center_lat[mode_raw == b'Target Mode'][j],site_center_lon[mode_raw == b'Target Mode'][j]))
+      target_id_temp, target_name_temp = target_id[mode_raw == b'Target Mode'][np.argmin(dist_temp)].astype(str), target_name[mode_raw == b'Target Mode'][np.argmin(dist_temp)].astype(str)
+      site_center_lat_temp, site_center_lon_temp = site_center_lat[mode_raw == b'Target Mode'][np.argmin(dist_temp)],site_center_lon[mode_raw == b'Target Mode'][np.argmin(dist_temp)]
+
+    else:
+      print("Why isn't this a TG/AM?")
+      sys.exit()
+
+    ############################
+    #Create the figure for this SAM/TG
     #Automatically set the map bounds
     N,S,E,W = np.round(data_temp2['latitude'].max()+.25,1),np.round(data_temp2['latitude'].min()-.25,1),np.round(data_temp2['longitude'].max()+(.25/np.cos(np.deg2rad(data_temp2['latitude'].max()))),1),np.round(data_temp2['longitude'].min()-(.25/np.cos(np.deg2rad(data_temp2['latitude'].min()))),1)
-
-    #Create figure
     fig, ax1 = plt.subplots(figsize=[20,20])
     m1 = Basemap(llcrnrlon=W,llcrnrlat=S,urcrnrlon=E,urcrnrlat=N,epsg=epsg,resolution='h')
-    m1.arcgisimage(service='World_Imagery', xpixels = 2000, verbose = True)
+    #Sometimes grabbing imagery from the online repository fails, so you have to try again
+    try: m1.arcgisimage(service='World_Imagery', xpixels = 2000, verbose = True)
+    except:
+      time.sleep(20)
+      m1.arcgisimage(service='World_Imagery', xpixels = 2000, verbose = True)
     m1.drawmeridians(np.linspace(W,E,6)[1:-1],labels=[0,0,0,1],size=24,color='0.75')
     m1.drawparallels(np.linspace(N,S,6)[1:-1],labels=[1,0,0,0],size=24,color='0.75')
     m1.drawcoastlines()
@@ -280,7 +385,6 @@ def plot_map(data_temp):
     for i in range(len(x1)):
       if (x1[i] == 0.0)|(x2[i] == 0.0)|(x3[i] == 0.0)|(x4[i] == 0.0): print("Bad vertex...")
       else: patches += [Polygon([(x1[i],y1[i]),(x2[i],y2[i]),(x3[i],y3[i]),(x4[i],y4[i])])]
-
     p = PatchCollection(patches, alpha=1.)
     p.set_array(data_temp2['xco2'])
 
@@ -290,6 +394,7 @@ def plot_map(data_temp):
     #Set the colormap
     p.set_cmap(plt.cm.viridis)
 
+    #Add the vertices to the plot
     ax1.add_collection(p)
 
     #Colorbar
@@ -298,19 +403,6 @@ def plot_map(data_temp):
     cbar = fig.colorbar(p,extend='both',cax=cax)
     cbar.set_label(r'$X_{CO_2}$'+' [ppm]',size=28,rotation=270,labelpad=35)
     cbar.ax.tick_params(labelsize=22)
-
-    #Do some annoying stuff to make a time stamp
-    month_str = calendar.month_abbr[int(data_temp2['sounding_id'][0].astype(str)[4:6].lstrip("0"))]
-    day_str, year_str = data_temp2['sounding_id'][0].astype(str)[6:8].lstrip("0"), data_temp2['sounding_id'][0].astype(str)[:4].lstrip("0")
-    hour_str, minute_str = data_temp2['sounding_id'][0].astype(str)[8:10],data_temp2['sounding_id'][0].astype(str)[10:12]
-
-    #Find the closest listed target in space and use that as a label. There really needs to be a better way to do this without having to load auxiliary files
-    dist_temp = np.zeros((len(target_id)))
-    mean_lat_temp,mean_lon_temp = np.median(data_temp2['latitude']), np.median(data_temp2['longitude']) 
-    for j in range(len(dist_temp)):
-      dist_temp[j] = haversine((mean_lat_temp,mean_lon_temp),(site_center_lat[j],site_center_lon[j]))
-    target_id_temp, target_name_temp = target_id[np.argmin(dist_temp)].astype(str), target_name[np.argmin(dist_temp)].astype(str)
-    site_center_lat_temp, site_center_lon_temp = site_center_lat[np.argmin(dist_temp)],site_center_lon[np.argmin(dist_temp)] 
 
     #Lengthly titles
     title = ax1.set_title('OCO-3 '+r'$X_{CO_2}$'+'\n'+data_temp2['sounding_operation_mode_string'][0].astype(str)+' Mode ('+data_temp2['sounding_pcs_data_source_string'][0].astype(str)+'), '+target_id_temp+', "'+target_name_temp+'"\n'+data_temp2['production_string'][0].astype(str)+', '+hour_str+':'+minute_str+' UTC '+day_str+' '+month_str+' '+year_str+', Orbit '+str(int(data_temp2['orbit'][0])),size=30,y=1.01)
@@ -327,17 +419,14 @@ def plot_map(data_temp):
 
     #Put a red cross where the target is
     x1_target,y1_target = m1(site_center_lon_temp,site_center_lat_temp)
-    ax1.scatter(x1_target,y1_target,c='r',marker="+",s=300)
+    ax1.scatter(x1_target,y1_target,c='r',marker="+",s=600)
 
-    #Save!
+    #Save! If you're displaying the plots interactively, the sizes of fonts/etc. will be weird compared to if you actually use savefig to save it.
     #print("Saving as ",data_temp2['production_string'][0].astype(str)+'/.../OCO3_..._'+str(data_temp2['sounding_id'][0])[:8]+'_'+target_id_temp+'.png')
-    #plt.savefig('~/'+data_temp2['production_string'][0].astype(str)+'/xco2/OCO3_xco2_'+str(data_temp2['sounding_id'][0])[:8]+'_'+target_id_temp+'.png')
+    #plt.savefig('~/path/to/figures/'+data_temp2['production_string'][0].astype(str)+'/xco2/OCO3_xco2_'+str(data_temp2['sounding_id'][0])[:8]+'_'+target_id_temp+'.png')
     #plt.close()
 
 
 #########################
 plot_map(data_l2)
-
-
-
 
