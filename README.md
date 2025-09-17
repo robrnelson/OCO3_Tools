@@ -8,6 +8,7 @@ Install dependencies using `conda` (or `mamba`):
 ```bash
 conda env create -f oco3_tools_env.yml
 conda activate oco3_tools_env
+```
 
 ## Data
 
