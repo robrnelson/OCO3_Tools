@@ -6,7 +6,8 @@ A simple Python tool to load data from an OCO-3 .nc4 Lite file and plot the qual
 Install dependencies using `conda` (or `mamba`):
 
 ```bash
-conda install h5py numpy argparse scipy calendar matplotlib pyproj PIL urllib cartopy
+conda env create -f oco3_tools_env.yml
+conda activate oco3_tools_env
 
 ## Data
 
