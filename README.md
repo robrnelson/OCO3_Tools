@@ -1,6 +1,13 @@
 # OCO3_plot_SAM.py
 A simple Python tool to load data from an OCO-3 .nc4 Lite file and plot the quality flagged, bias corrected XCO2 for a single Snapshot Area Mapping (SAM) mode observation on a map.  
 
+## Requirements
+
+Install dependencies using `conda` (or `mamba`):
+
+```bash
+conda install h5py numpy argparse scipy calendar matplotlib pyproj PIL urllib cartopy
+
 ## Data
 
 OCO-3 v11 .nc4 Lite files can be download from GESDISC:

@@ -1,0 +1,13 @@
+name: oco3_tools_env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - numpy
+  - scipy
+  - h5py
+  - matplotlib
+  - pyproj
+  - pillow
+  - cartopy
