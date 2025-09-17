@@ -209,8 +209,8 @@ def plot_data(data_temp, site_temp):
     ax2.coastlines(color="0.25")
 
     #Save figure
-    print("Saving as "+'OCO3_'+data_temp['production_string'][0].astype(str)+"_"+var_string+'_'+str(data_temp['sounding_id'][0])[:8]+'_'+str(int(data_temp['orbit'][0]))+"_"+data_temp['target_id'][0].astype(str)+'.png')
-    plt.savefig('OCO3_'+data_temp['production_string'][0].astype(str)+"_"+var_string+'_'+str(data_temp['sounding_id'][0])[:8]+'_'+str(int(data_temp['orbit'][0]))+"_"+data_temp['target_id'][0].astype(str)+'.png')
+    print("Saving as "+'OCO3_'+data_temp['production_string'][0].astype(str)+"_"+var_string+'_'+str(data_temp['sounding_id'][0])[:8]+'_'+str(int(data_temp['orbit'][0]))+"_"+data_temp['target_id'][0].astype(str)+'_'+data_temp['target_name'][0].astype(str)+'.png')
+    plt.savefig('OCO3_'+data_temp['production_string'][0].astype(str)+"_"+var_string+'_'+str(data_temp['sounding_id'][0])[:8]+'_'+str(int(data_temp['orbit'][0]))+"_"+data_temp['target_id'][0].astype(str)+'_'+data_temp['target_name'][0].astype(str)+'.png')
  
     #Close figure
     plt.close()

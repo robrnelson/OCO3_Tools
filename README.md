@@ -13,5 +13,5 @@ There are mulitple ways to download the data shown on the right under "Data Acce
 python OCO3_plot_SAM.py filename site
 
 ## Example
-python OCO3_plot_SAM.py oco3_LtCO2_241026_B11072Ar_241216155238s.nc4 fossil_Los_Angeles_USA
+python OCO3_plot_SAM.py oco3_LtCO2_211218_B11072Ar_240915205334s.nc4 fossil_Los_Angeles_USA
 
